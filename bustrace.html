@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<!-- (c)taisukef CC BY  http://fukuno.jig.jp/ -->
+<html>
+<head>
+<meta charset='utf-8'/>
+<title>昨日のつつじバスの軌跡</title>
+<meta property="og:image" content="http://fukuno.jig.jp/app/bus/bustrace.jpg">
+<link rel="apple-touch-icon" href="http://fukuno.jig.jp/app/bus/bustrace.jpg"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<script src="lib/fukuno.js"></script>
+<script>"use strict";
+
+// dt: YYYYMMDDhhmmss or YYYYMMDD
+var getBusRecord = function(busid, dt, callback) {
+	var url = "http://tutujibus.com/rosenrecordLookup.php";
+	url += "?callback=" + getCallbackMethod(function(data) {
+		callback(data.rosenrecord);
+	});
+//	url += "&rosenid=" + rosenid;
+	url += "&busid=" + busid;
+	url += "&datetime=" + dt;
+//	url += "&count=100";
+	jsonp(url);
+};
+
+var getAreaWindow = function(data) {
+	var latmin = 10000;
+	var lngmin = 10000;
+	var latmax = -latmin;
+	var lngmax = -lngmin;
+	for (var i = 0; i < data.length; i++) {
+		var d = data[i];
+		var lat = d.latitude;
+		if (lat > latmax)
+			latmax = lat;
+		else if (lat < latmin)
+			latmin = lat;
+		var lng = d.longitude;
+		if (lng > lngmax)
+			lngmax = lng;
+		else if (lng < lngmin)
+			lngmin = lng;
+	}
+	return { latmin: latmin, lngmin: lngmin, latmax: latmax, lngmax: lngmax };
+};
+var getAreaSabae = function() {
+//	return { latmin: 35.921815, lngmin: 136.121765, latmax: 36.009068, lngmax: 136.341491 };
+	return { latmin: 35.921815, lngmin: 136.13, latmax: 36.009068, lngmax: 136.30 };
+};
+var getYesterday = function() {
+	var d = new Date();
+	d = new Date(d.getTime() - 24 * 60 * 60 * 1000);
+	return d.getFullYear() + fixnum(d.getMonth() + 1, 2) + fixnum(d.getDate(), 2);
+};
+var drawBusLine = function(g, dt, busid, col) {
+	getBusRecord(busid, "20150625090000", function(data) {
+//		dump(data); // 
+/*
+isRunning: true
+datetime: 20150625090004
+busid: 1
+rosenid: 10
+binid: 2
+latitude: 35.9542557972926
+longitude: 136.284383165481
+speed: 0
+direction: 269.096954345703
+isdelay: false
+*/
+//		var win = getAreaWindow(data);
+		var win = getAreaSabae();
+		var gw = g.cw;
+		var gh = g.ch;
+		var off = 20;
+		g.setColor(col[0], col[1], col[2]);
+		g.globalAlpha = 0.05;
+		console.log(data.length);
+		for (var i = 0; i < data.length; i++) {
+			var d = data[i];
+			var lat = d.latitude;
+			var lng = d.longitude;
+			var y = off + (lat - win.latmin) / (win.latmax - win.latmin) * (gh - off * 2);
+			var x = off + (lng - win.lngmin) / (win.lngmax - win.lngmin) * (gw - off * 2);
+			g.fillCircle(x, y, 3);
+		}
+	});
+};
+
+window.onload = function() {
+	var c = get("canvas");
+	var g = getContext(c);
+	g.init();
+
+	var maxbus = 7;
+	for (var i = 1; i <= maxbus; i++) {
+		var col = hsv2rgb(360 / maxbus * i, .8, .8);
+		drawBusLine(g, getYesterday() + "080000", i, col);
+	}
+};
+
+/*
+rosen col
+#e1272a // 中央
+#39821b // 鯖江南
+#235010 // 新横江
+#57bff7 // 神明
+#2036f2 // 片上・北中山
+#73f641 // 立待
+#f4c03b // 吉川
+#e58ef5 // 豊
+#74307f // 中河・北中山
+#e48632 // 河和田
+#772b17 // 丹南高校
+#858585 // 歴史の道
+*/
+var getRosenTsutsuji = function(callback) {
+	callback({ "rosen":[
+		{"id":"1","name":"中央線",col:"#e1272a"},
+		{"id":"2","name":"鯖江南線",col:"#39821b"},
+		{"id":"3","name":"新横江線",col:"#235010"},
+		{"id":"4","name":"神明線",col:"#57bff7"},
+		{"id":"5","name":"片上・北中山線",col:"#2036f2"},
+		{"id":"6","name":"立待線",col:"#73f641"},
+		{"id":"7","name":"吉川線",col:"#f4c03b"},
+		{"id":"8","name":"豊線",col:"#e58ef5"},
+		{"id":"9","name":"中河・北中山線",col:"#74307f"},
+		{"id":"10","name":"河和田線",col:"#e48632"},
+		{"id":"11","name":"丹南高校線",col:"#e772b17"},
+		{"id":"12","name":"歴史の道線",col:"#858585"},
+		{"id":"99","name":"福鉄鯖浦線",col:"#000000"} // なぞ路線
+	]});
+};
+</script>
+<style>
+body {
+	margin: 0px;
+	box-sizing: border-box; /* width include border */
+	-webkit-text-size-adjust: none; /* for iPhone */
+}
+h1 {
+	margin: 5px;
+	font-size: 130%;
+	text-align: center;
+}
+#canvas {
+	display: block;
+	width: 100%;
+	height: 400px;
+}
+button {
+	margin: 10px;
+	width: 5em;
+	padding: 5px 20px;
+	font-size: 130%;
+	border: none;
+	background: #eee;
+	color: #222;
+}
+#credit {
+	text-align: center;
+}
+a {
+	color: #777 !important;
+}
+@media screen and (min-width: 440px) {
+}
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas><br>
+
+<div id='credit'>
+<h1>昨日のつつじバスの軌跡</h1>
+<a href='http://fukuno.jig.jp/1066'>CC BY fukuno.jig.jp</a>
+</div>
+
+</body>
+</html>

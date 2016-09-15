@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'/>
+<title>京福バスAPIデモ</title>
+<meta property="og:image" content="http://fukuno.jig.jp/app/bus/keifukubusapidemo.png">
+<link rel="apple-touch-icon" href="http://fukuno.jig.jp/app/bus/keifukubusapidemo.png"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, target-densitydpi=medium-dpi">
+<script src='http://fukuno.jig.jp/fukuno.js'></script>
+<script src='keifukubus.js'></script>
+<script>'use strict';
+
+window.onload = function() {
+	getKeifukuBusLine(function(data) {
+//		dump(data);
+		var c = get("main");
+		data = data.rosen;
+		for (var i = 0; i < data.length; i++) {
+			var div = create("div");
+			var d = data[i];
+			div.textContent = (i + 1) + ". " + d.rosenname + "(" + d.rosenid + "-" + d.keitoid + "系統) " + d.ikisaki + "行き";
+			div.style.cursor = "pointer";
+			c.appendChild(div);
+			div.data = d;
+			div.className = "busline";
+
+			div.onclick = function() {
+				var d = this.data;
+				var rosen = d.rosenid;
+				var keito = d.keitoid;
+				var div = this;
+//				console.log(rosen + " " + keito);
+				if (div.div2 || div.div3) {
+					if (div.div2) {
+						c.removeChild(div.div2);
+						div.div2 = null;
+					}
+					if (div.div3) {
+						c.removeChild(div.div3);
+						div.div3 = null;
+					}
+					return;
+				}
+				getKeifukuBusPosition(1, 1, function(data) {
+					console.log(data);
+//					dump(data);
+					data = data.realtime;
+					var s = "ありません";
+					if (data.length > 0) {
+						s = "<a href=http://maps.google.com/?ll=" + data.lat + "," + data.lng + ">" + data.lat + "," + data.lon + "</a> 次のバス停：" + data.busstopodr;
+					}
+					var div2 = create("div");
+					div2.innerHTML = "バス現在位置：" + s;
+					div2.style.marginLeft = "2em";
+					c.insertBefore(div2, div.nextSibling);
+					div2.style.cursor = "pointer";
+					div2.onclick = function() {
+						c.removeChild(this);
+						this.p.div3 = null;
+						if (this.p.div2) {
+							c.removeChild(this.p.div2);
+							this.p.div2 = null;
+						}
+					};
+					div2.className = "buspos";
+					div2.p = div;
+					div.div3 = div2;
+
+					getKeifukuBusStop(rosen, keito, function(data) {
+						console.log(data);
+	//					dump(data);
+						data = data.list;
+						var s = [];
+						for (var i = 0; i < data.length; i++) {
+							s.push(data[i].odr + "." + data[i].name);
+						}
+						var div2 = create("div");
+						div2.textContent = "停留所：" + s.join(" → ");
+						div2.style.marginLeft = "2em";
+						c.insertBefore(div2, div.nextSibling);
+						div2.style.cursor = "pointer";
+						div2.onclick = function() {
+							c.removeChild(this);
+							this.p.div2 = null;
+							if (this.p.div3) {
+								c.removeChild(this.p.div3);
+								this.p.div3 = null;
+							}
+						};
+						div2.className = "busstop";
+						div2.p = div;
+						div.div2 = div2;
+					});
+				});
+
+			};
+		}
+	});
+	/*
+	getBusStop(1, 1, function(data) {
+		dump(data);
+	});
+	getBusPosition(1, 1, function(data) {
+		dump(data);
+	});
+	*/
+};
+
+</script>
+
+<style>
+body {
+	margin: 0px;
+}
+h1 {
+	font-size: 40px;
+	padding: 8px;
+	text-align: center;
+}
+
+.busline {
+	background: #d8f8d8;
+	padding: 3px;
+	margin: 2px;
+	border-radius: 3px;
+}
+.busstop {
+	background: #f8d8d8;
+	padding: 3px;
+	margin: 2px;
+	border-radius: 3px;
+}
+.buspos {
+	background: #d8d8f8;
+	padding: 3px;
+	margin: 2px;
+	border-radius: 3px;
+}
+
+.credit {
+	margin: 30px;
+	font-size: 90%;
+	text-align: center;
+}
+a {
+	color: gray !important;
+}
+</style>
+</head>
+<body>
+
+<h1>京福バスAPIデモ</h1>
+
+<div id='main'></div>
+
+<div class='credit'>
+DATA: <a href=https://creativecommons.org/licenses/by/4.0/deed.ja>CC BY</a> <a href=http://busnavi.keifuku.co.jp/webapi/index.html>京福バスナビ WEB API</a>(<a href=http://busnavi.keifuku.co.jp/index.php>京福バスナビ</a>)<br>
+APP: <a href=https://creativecommons.org/licenses/by/4.0/deed.ja>CC BY</a> <a href='http://fukuno.jig.jp/1515'>fukuno.jig.jp</a><br>
+
+</div>
+
+</body>
+</html>
