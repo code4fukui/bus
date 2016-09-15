@@ -54,6 +54,7 @@ window.onload = function() {
 					div2.innerHTML = "バス現在位置：" + s;
 					div2.style.marginLeft = "2em";
 					c.insertBefore(div2, div.nextSibling);
+					/*
 					div2.style.cursor = "pointer";
 					div2.onclick = function() {
 						c.removeChild(this);
@@ -63,6 +64,7 @@ window.onload = function() {
 							this.p.div2 = null;
 						}
 					};
+					*/
 					div2.className = "buspos";
 					div2.p = div;
 					div.div3 = div2;
@@ -79,6 +81,7 @@ window.onload = function() {
 						div2.textContent = "停留所：" + s.join(" → ");
 						div2.style.marginLeft = "2em";
 						c.insertBefore(div2, div.nextSibling);
+						/*
 						div2.style.cursor = "pointer";
 						div2.onclick = function() {
 							c.removeChild(this);
@@ -88,6 +91,7 @@ window.onload = function() {
 								this.p.div3 = null;
 							}
 						};
+						*/
 						div2.className = "busstop";
 						div2.p = div;
 						div.div2 = div2;
