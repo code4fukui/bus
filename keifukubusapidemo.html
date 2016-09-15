@@ -47,7 +47,8 @@ window.onload = function() {
 					data = data.realtime;
 					var s = "ありません";
 					if (data.length > 0) {
-						s = "<a href=http://maps.google.com/?ll=" + data.lat + "," + data.lng + ">" + data.lat + "," + data.lon + "</a> 次のバス停：" + data.busstopodr;
+						var d = data[0];
+						s = "<a href=http://maps.google.com/?ll=" + d.lat + "," + d.lon + ">" + d.lat + "," + d.lon + "</a> 次のバス停：" + d.busstopodr;
 					}
 					var div2 = create("div");
 					div2.innerHTML = "バス現在位置：" + s;
